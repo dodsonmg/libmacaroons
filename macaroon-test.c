@@ -36,6 +36,8 @@
 
 /* macaroons */
 #include "macaroons.h"
+#include "macaroons-inner.h"
+#include "slice.h"
 #include "base64.h"
 
 #define STRLENOF(X) (sizeof(X) - 1)
@@ -118,9 +120,6 @@ parse_macaroon(const char* line, struct macaroon*** macaroons, size_t* macaroons
 
     int rc = b64_pton(line, buf, buf_sz);
 
-    printf("buf_sz\t= %ld\n", buf_sz);
-    printf("rc\t= %d\n", rc);
-
     if (rc < 0)
     {
         fprintf(stderr, "could not unwrap serialized macaroon\n");
@@ -150,7 +149,7 @@ parse_macaroon(const char* line, struct macaroon*** macaroons, size_t* macaroons
     (*macaroons)[*macaroons_sz - 1] = M;
     return 0;
 }
-        
+
 int
 main(int argc, const char* argv[])
 {
@@ -168,7 +167,7 @@ main(int argc, const char* argv[])
     if (!(V = macaroon_verifier_create()))
     {
         fprintf(stderr, "could not create verifier: %s\n", strerror(ferror(stdin)));
-        goto fail;
+        abort();
     }
 
     while (1)
@@ -183,7 +182,7 @@ main(int argc, const char* argv[])
             }
 
             fprintf(stderr, "could not read from stdin: %s\n", strerror(ferror(stdin)));
-            goto fail;
+            abort();
         }
 
         if (!line || amt == 0 || *line == '\n' || *line == '#')
@@ -197,7 +196,7 @@ main(int argc, const char* argv[])
         {
             if (parse_version(line) < 0)
             {
-                goto fail;
+                abort();
             }
         }
         else if (strcmp(line, AUTHORIZED) == 0)
@@ -212,14 +211,14 @@ main(int argc, const char* argv[])
         {
             if (parse_key(line, &key, &key_sz) < 0)
             {
-                goto fail;
+                abort();
             }
         }
         else if (strncmp(line, EXACT, STRLENOF(EXACT)) == 0)
         {
             if (parse_exact_caveat(line, V) < 0)
             {
-                goto fail;
+                abort();
             }
         }
         else if (strncmp(line, GENERAL, STRLENOF(GENERAL)) == 0)
@@ -228,60 +227,103 @@ main(int argc, const char* argv[])
         }
         else if (parse_macaroon(line, &macaroons, &macaroons_sz) < 0)
         {
-            goto fail;
+            abort();
         }
     }
 
     if (macaroons_sz == 0)
     {
         fprintf(stderr, "no macaroons provided\n");
-        goto fail;
+        abort();
     }
 
+    // create a new macaroon (which is a replica of the one in caveat_v1_1.vtest)
+
+    struct macaroon* M = macaroons[0];
+    struct macaroon* N = NULL;
     enum macaroon_returncode err;
-    int verify = macaroon_verify(V, macaroons[0], key, key_sz, 
-                                 macaroons + 1, macaroons_sz - 1, &err);
+    size_t data_sz;
+    unsigned char* data;
 
-    if (verify != 0 && err != MACAROON_NOT_AUTHORIZED)
-    {
-        fprintf(stderr, "verification encountered exceptional error: %s\n", macaroon_error(err));
-        goto fail;
-    }
+    //characteristics of the new macaroon
+    const unsigned char* N_key = "this is the key";
+    size_t N_key_sz = strlen(N_key);
 
-    if (verify == 0 && !authorized)
-    {
-        fprintf(stderr, "verification passed for \"unauthorized\" scenario\n");
-        goto fail;
-    }
+    const unsigned char* N_location = "http://example.org/";
+    size_t N_location_sz = strlen(N_location);
 
-    if (verify != 0 && err == MACAROON_NOT_AUTHORIZED && authorized)
-    {
-        fprintf(stderr, "verification failed for \"authorized\" scenario\n");
-        goto fail;
-    }
+    const unsigned char* N_identifier = "keyid";
+    size_t N_identifier_sz = strlen(N_identifier);
 
-    if (verify == 0 && authorized)
-    {
-        fprintf(stderr, "verification passed\n");
-        goto exit;
-    }
+    const char* N_predicate = "account = 3735928559";
+    size_t N_predicate_sz = strlen(N_predicate);
 
-    if (verify != 0)
-    {
-        fprintf(stderr, "verification failed, as expected\n");
-        goto exit;
-    }
+    const char* N_predicate_2 = "ip = 8.8.8.8";
+    size_t N_predicate_sz_2 = strlen(N_predicate_2);
 
-    goto exit;
+    N = macaroon_create(N_location, N_location_sz, N_key, N_key_sz, N_identifier, N_identifier_sz, &err);
 
-fail:
-    ret = EXIT_FAILURE;
+    // N = macaroon_add_first_party_caveat(N, N_predicate, N_predicate_sz, &err);
+    N = macaroon_add_first_party_caveat(N, N_predicate_2, N_predicate_sz_2, &err);
 
-exit:
+    // pretty print the original and new macaroon
+    printf("\n");
+    data_sz = macaroon_inspect_size_hint(M);
+    data = malloc(data_sz);
+    macaroon_inspect(M, data, data_sz, &err);
+    printf("%s\n\n", data);
 
+    data_sz = macaroon_inspect_size_hint(N);
+    data = malloc(data_sz);
+    macaroon_inspect(N, data, data_sz, &err);
+    printf("%s\n\n", data);
+
+    // serialise the new macaroon and compare with the old macaroon
+    size_t N_buf_sz = macaroon_serialize_size_hint(N, MACAROON_V1);
+    unsigned char* N_buf = malloc(N_buf_sz);
+
+    size_t M_buf_sz = macaroon_serialize_size_hint(M, MACAROON_V1);
+    unsigned char* M_buf = malloc(M_buf_sz);
+
+    macaroon_serialize(N, MACAROON_V1, N_buf, N_buf_sz, &err);
+    macaroon_serialize(M, MACAROON_V1, M_buf, M_buf_sz, &err);
+
+    printf("N serialized:\t%s\n", N_buf);
+    printf("M serialized:\t%s\n", M_buf);
+
+    // show this is the same as the serialised string in caveat_v1_1.vtest
+    M_buf_sz = strlen(line);
+    M_buf = malloc(M_buf_sz);
+    b64_pton(line, M_buf, M_buf_sz);  // unsure why or where the base conversion happens
+    printf("M serialized:\t%s\n", M_buf);
+
+    // deserialise and verify the token
+    N = macaroon_deserialize(N_buf, N_buf_sz, &err);
+
+    // pretty print for quick verification
+    printf("\n");
+    data_sz = macaroon_inspect_size_hint(N);
+    data = malloc(data_sz);
+    macaroon_inspect(N, data, data_sz, &err);
+    printf("%s\n\n", data);
+
+    // construct a verifier
+    V = macaroon_verifier_create();
+
+    int satisfy;
+
+    satisfy = macaroon_verifier_satisfy_exact(V, N_predicate, N_predicate_sz, &err);
+    printf("satisfy\t= %d\n", satisfy);
+    printf("err:\t= %d\n", err);
+    satisfy = macaroon_verifier_satisfy_exact(V, N_predicate_2, N_predicate_sz_2, &err);
+    printf("satisfy\t= %d\n", satisfy);
+    printf("err:\t= %d\n", err);
+
+    int verify = macaroon_verify(V, N, N_key, N_key_sz, NULL, 0, &err);
     printf("verify\t= %d\n", verify);
-    printf("err\t= %d\n", err);
+    printf("err:\t= %d\n", err);
 
+    // cleanup!
     if (line)
     {
         free(line);
