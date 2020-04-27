@@ -23,26 +23,29 @@ add_library(macaroons SHARED
             src/v1.c
             src/v2.c
             src/varint.c
+            src/macaroons.cpp
             )
-target_compile_definitions(macaroons
-  PRIVATE "MACAROONS_DLL")
-ament_target_dependencies(macaroons)
+#target_compile_definitions(macaroons
+#  PRIVATE "MACAROONS_DLL")
+#ament_target_dependencies(macaroons)
 
 target_include_directories(macaroons PRIVATE include)
-target_include_directories(macaroons PRIVATE src)
+
+set_target_properties(macaroons PROPERTIES PUBLIC_HEADER include/macaroons.hpp)
 
 # This package installs libraries without exporting them.
 # Export the library path to ensure that the installed libraries are available.
-if(NOT WIN32)
-  ament_environment_hooks(
-    "${ament_cmake_package_templates_ENVIRONMENT_HOOK_LIBRARY_PATH}"
-    )
-endif()
+#if(NOT WIN32)
+#  ament_environment_hooks(
+#    "${ament_cmake_package_templates_ENVIRONMENT_HOOK_LIBRARY_PATH}"
+#    )
+#endif()
 
 install(TARGETS
   macaroons
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
+  PUBLIC_HEADER DESTINATION include
   RUNTIME DESTINATION bin)
 
 ament_package()
