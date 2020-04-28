@@ -260,11 +260,11 @@ MacaroonVerifier::verify(Macaroon M){
 
     result = macaroon_verify(V_, M.get_macaroon_raw(), pkey, pkey_sz, MS, MS_sz, &err_);
 
-    if(result != 0)
-    {
-        std::cout << "Error in MacaroonVerifier::verify:" << std::endl;
-        // print_verifier_error(err);
-    }
+    // if(result != 0)
+    // {
+    //     std::cout << "Error in MacaroonVerifier::verify:" << std::endl;
+    //     print_verifier_error(err);
+    // }
 
     return result;
 }
