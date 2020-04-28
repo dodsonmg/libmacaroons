@@ -28,12 +28,14 @@ public:
   bool initialised();
   void print_macaroon();
   struct macaroon* get_macaroon_raw();
+  std::string get_macaroon_error(); 
 
 private:
   int create_macaroon(const std::string location, const std::string key, const std::string identifier);
-  void print_macaroon_error(enum macaroon_returncode err);
+  void print_macaroon_error();
 
   struct macaroon* M_;
+  enum macaroon_returncode err_;
 };
 
 

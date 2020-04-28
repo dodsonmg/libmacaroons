@@ -33,7 +33,6 @@ Macaroon::Macaroon()
 std::string
 Macaroon::serialise()
 {
-    enum macaroon_returncode err;
     size_t buf_sz = 0;
     unsigned char* buf = NULL;
 
@@ -44,18 +43,15 @@ Macaroon::serialise()
     // If M is NULL
     if(!M_)
     {
-        // std::cout << "The macaroon is NULL" << std::endl;
         return "";
     }
 
     buf_sz = macaroon_serialize_size_hint(M_, MACAROON_V1);
     buf = (unsigned char*)malloc(buf_sz);
 
-    macaroon_serialize(M_, MACAROON_V1, buf, buf_sz, &err);
+    macaroon_serialize(M_, MACAROON_V1, buf, buf_sz, &err_);
 
     std::string serialised( (const char *)buf );
-
-    // std::cout << serialised << std::endl;
 
     return serialised;
 }
@@ -63,16 +59,13 @@ Macaroon::serialise()
 int
 Macaroon::add_first_party_caveat(const std::string predicate)
 {
-    enum macaroon_returncode err;
     const unsigned char* ppredicate = (const unsigned char*)predicate.c_str();
     size_t ppredicate_sz = predicate.size();
 
-    M_ = macaroon_add_first_party_caveat(M_, ppredicate, ppredicate_sz, &err);
+    M_ = macaroon_add_first_party_caveat(M_, ppredicate, ppredicate_sz, &err_);
 
     if(!M_)
     {
-        std::cout << "Caveat addition failed" << std::endl;
-        print_macaroon_error(err);
         return -1;
     }
 
@@ -90,14 +83,11 @@ Macaroon::deserialise(std::string M_serialised)
 {
     const unsigned char* data = (const unsigned char*)M_serialised.c_str();
     size_t data_sz = M_serialised.size();
-    enum macaroon_returncode err;
 
-    M_ = macaroon_deserialize(data, data_sz, &err);
+    M_ = macaroon_deserialize(data, data_sz, &err_);
 
     if(!M_)
     {
-        std::cout << "Macaroon creation failed" << std::endl;
-        print_macaroon_error(err);
         return -1;
     }
 
@@ -111,8 +101,6 @@ Macaroon::deserialise(std::string M_serialised)
 int
 Macaroon::create_macaroon(const std::string location, const std::string key, const std::string identifier)
 {
-    enum macaroon_returncode err;
-
     const unsigned char* plocation = (const unsigned char*)location.c_str();
     const unsigned char* pkey = (const unsigned char*)key.c_str();
     const unsigned char* pidentifier = (const unsigned char*)identifier.c_str();
@@ -123,7 +111,7 @@ Macaroon::create_macaroon(const std::string location, const std::string key, con
 
     M_ = macaroon_create(plocation, location_sz, 
                         pkey, key_sz, 
-                        pidentifier, identifier_sz, &err);
+                        pidentifier, identifier_sz, &err_);
 
     /* DEBUG */
     // print_macaroon(M);
@@ -132,8 +120,6 @@ Macaroon::create_macaroon(const std::string location, const std::string key, con
     // if macaroon creation fails, M will be NULL and an error code (hopefully) returned
     if(!M_)
     {
-        std::cout << "Macaroon creation failed" << std::endl;
-        print_macaroon_error(err);        
         return -1;
     }
 
@@ -160,10 +146,10 @@ Macaroon::get_macaroon_raw()
 }
 
 void
-Macaroon::print_macaroon_error(enum macaroon_returncode err)
+Macaroon::print_macaroon_error()
 {
-  std::cout << "Error (" << err << "): ";
-  switch(err) {
+  std::cout << "Error (" << err_ << "): ";
+  switch(err_) {
       case MACAROON_SUCCESS : std::cout << "MACAROON_SUCCESS" << std::endl; break;
       case MACAROON_OUT_OF_MEMORY : std::cout << "MACAROON_OUT_OF_MEMORY" << std::endl; break;
       case MACAROON_HASH_FAILED : std::cout << "MACAROON_HASH_FAILED" << std::endl; break;
@@ -177,16 +163,35 @@ Macaroon::print_macaroon_error(enum macaroon_returncode err)
   }
 }
 
+std::string
+Macaroon::get_macaroon_error()
+{
+    std::string err;
+    switch(err_) {
+        case MACAROON_SUCCESS : err = "MACAROON_SUCCESS"; break;
+        case MACAROON_OUT_OF_MEMORY : err = "MACAROON_OUT_OF_MEMORY"; break;
+        case MACAROON_HASH_FAILED : err = "MACAROON_HASH_FAILED"; break;
+        case MACAROON_INVALID : err = "MACAROON_INVALID"; break;
+        case MACAROON_TOO_MANY_CAVEATS : err = "MACAROON_TOO_MANY_CAVEATS"; break;
+        case MACAROON_CYCLE : err = "MACAROON_CYCLE"; break;
+        case MACAROON_BUF_TOO_SMALL : err = "MACAROON_BUF_TOO_SMALL"; break;
+        case MACAROON_NOT_AUTHORIZED : err = "MACAROON_NOT_AUTHORIZED"; break;
+        case MACAROON_NO_JSON_SUPPORT : err = "MACAROON_NO_JSON_SUPPORT"; break;
+        case MACAROON_UNSUPPORTED_FORMAT : err = "MACAROON_UNSUPPORTED_FORMAT"; break;
+    }
+
+    return err;
+}
+
 void
 Macaroon::print_macaroon()
 {
-    enum macaroon_returncode err;
     size_t data_sz = 0;
     char* data = NULL;
     data_sz = macaroon_inspect_size_hint(M_);
     data = (char*)malloc(data_sz);
 
-    macaroon_inspect(M_, data, data_sz, &err);
+    macaroon_inspect(M_, data, data_sz, &err_);
     std::cout << data << std::endl;
 }
 
@@ -214,12 +219,6 @@ MacaroonVerifier::satisfy_exact(const std::string predicate)
     size_t ppredicate_sz = predicate.size();
 
     result = macaroon_verifier_satisfy_exact(V_, ppredicate, ppredicate_sz, &err_);
-
-    if(result != 0)
-    {
-        std::cout << "Error in MacaroonVerifier::satisfy_exact:" << std::endl;
-        print_verifier_error();
-    }
 
     return result;
 }
@@ -259,12 +258,6 @@ MacaroonVerifier::verify(Macaroon M){
     size_t MS_sz = 0;
 
     result = macaroon_verify(V_, M.get_macaroon_raw(), pkey, pkey_sz, MS, MS_sz, &err_);
-
-    // if(result != 0)
-    // {
-    //     std::cout << "Error in MacaroonVerifier::verify:" << std::endl;
-    //     print_verifier_error(err);
-    // }
 
     return result;
 }
