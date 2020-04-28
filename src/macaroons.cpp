@@ -212,14 +212,13 @@ MacaroonVerifier::satisfy_exact(const std::string predicate)
     int result;
     const unsigned char* ppredicate = (const unsigned char*)predicate.c_str();
     size_t ppredicate_sz = predicate.size();
-    enum macaroon_returncode err;
 
-    result = macaroon_verifier_satisfy_exact(V_, ppredicate, ppredicate_sz, &err);
+    result = macaroon_verifier_satisfy_exact(V_, ppredicate, ppredicate_sz, &err_);
 
     if(result != 0)
     {
         std::cout << "Error in MacaroonVerifier::satisfy_exact:" << std::endl;
-        print_verifier_error(err);
+        print_verifier_error();
     }
 
     return result;
@@ -252,7 +251,6 @@ MacaroonVerifier::verify(Macaroon M){
     */    
 
     int result;
-    enum macaroon_returncode err;
     const unsigned char* pkey = (const unsigned char*)key_.c_str();
     size_t pkey_sz = key_.size();
 
@@ -260,22 +258,22 @@ MacaroonVerifier::verify(Macaroon M){
     struct macaroon** MS = NULL;
     size_t MS_sz = 0;
 
-    result = macaroon_verify(V_, M.get_macaroon_raw(), pkey, pkey_sz, MS, MS_sz, &err);
+    result = macaroon_verify(V_, M.get_macaroon_raw(), pkey, pkey_sz, MS, MS_sz, &err_);
 
     if(result != 0)
     {
         std::cout << "Error in MacaroonVerifier::verify:" << std::endl;
-        print_verifier_error(err);
+        // print_verifier_error(err);
     }
 
     return result;
 }
 
 void
-MacaroonVerifier::print_verifier_error(enum macaroon_returncode err)
+MacaroonVerifier::print_verifier_error()
 {
-  std::cout << "Error (" << err << "): ";
-  switch(err) {
+  std::cout << "Error (" << err_ << "): ";
+  switch(err_) {
       case MACAROON_SUCCESS : std::cout << "MACAROON_SUCCESS" << std::endl; break;
       case MACAROON_OUT_OF_MEMORY : std::cout << "MACAROON_OUT_OF_MEMORY" << std::endl; break;
       case MACAROON_HASH_FAILED : std::cout << "MACAROON_HASH_FAILED" << std::endl; break;
@@ -287,4 +285,24 @@ MacaroonVerifier::print_verifier_error(enum macaroon_returncode err)
       case MACAROON_NO_JSON_SUPPORT : std::cout << "MACAROON_NO_JSON_SUPPORT" << std::endl; break;
       case MACAROON_UNSUPPORTED_FORMAT : std::cout << "MACAROON_UNSUPPORTED_FORMAT" << std::endl; break;
   }
+}
+
+std::string
+MacaroonVerifier::get_verifier_error()
+{
+    std::string err;
+    switch(err_) {
+        case MACAROON_SUCCESS : err = "MACAROON_SUCCESS"; break;
+        case MACAROON_OUT_OF_MEMORY : err = "MACAROON_OUT_OF_MEMORY"; break;
+        case MACAROON_HASH_FAILED : err = "MACAROON_HASH_FAILED"; break;
+        case MACAROON_INVALID : err = "MACAROON_INVALID"; break;
+        case MACAROON_TOO_MANY_CAVEATS : err = "MACAROON_TOO_MANY_CAVEATS"; break;
+        case MACAROON_CYCLE : err = "MACAROON_CYCLE"; break;
+        case MACAROON_BUF_TOO_SMALL : err = "MACAROON_BUF_TOO_SMALL"; break;
+        case MACAROON_NOT_AUTHORIZED : err = "MACAROON_NOT_AUTHORIZED"; break;
+        case MACAROON_NO_JSON_SUPPORT : err = "MACAROON_NO_JSON_SUPPORT"; break;
+        case MACAROON_UNSUPPORTED_FORMAT : err = "MACAROON_UNSUPPORTED_FORMAT"; break;
+    }
+
+    return err;
 }

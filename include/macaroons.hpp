@@ -48,12 +48,14 @@ class MacaroonVerifier
     int satisfy_exact(const std::string predicate);
     int satisfy_general(const std::string predicate);
     int verify(Macaroon M);  // eventually this needs to take in a tree of macaroons for 3rd party verifiers
+    std::string get_verifier_error();    
 
   private:
-    void print_verifier_error(enum macaroon_returncode err);
+    void print_verifier_error();
 
     struct macaroon_verifier* V_;
     std::string key_;
+    enum macaroon_returncode err_;
 };
 
 #endif  // MACAROON_HPP_
