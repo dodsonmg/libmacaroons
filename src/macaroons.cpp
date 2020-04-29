@@ -3,10 +3,10 @@
 #include <string>
 #include <iostream>
 
-#include "macaroons.hpp"
+#include "macaroons/macaroons.hpp"
 
 /* macaroons */
-#include "macaroons.h"
+#include "macaroons/macaroons.h"
 
 /******************************************************************************
 *  Macaroon class implementation

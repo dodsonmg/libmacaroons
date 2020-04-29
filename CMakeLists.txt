@@ -5,8 +5,6 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-set(HAVE_CONFIG_H 1)
-
 find_package(ament_cmake REQUIRED)
 
 add_library(macaroons SHARED
@@ -25,27 +23,28 @@ add_library(macaroons SHARED
             src/varint.c
             src/macaroons.cpp
             )
-#target_compile_definitions(macaroons
-#  PRIVATE "MACAROONS_DLL")
-#ament_target_dependencies(macaroons)
 
-target_include_directories(macaroons PRIVATE include)
+target_include_directories(macaroons PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
 
-set_target_properties(macaroons PROPERTIES PUBLIC_HEADER include/macaroons.hpp)
+ament_export_interfaces(export_macaroons HAS_LIBRARY_TARGET)
 
-# This package installs libraries without exporting them.
-# Export the library path to ensure that the installed libraries are available.
-#if(NOT WIN32)
-#  ament_environment_hooks(
-#    "${ament_cmake_package_templates_ENVIRONMENT_HOOK_LIBRARY_PATH}"
-#    )
-#endif()
+install(
+  DIRECTORY include/
+  DESTINATION include
+)
 
-install(TARGETS
-  macaroons
+install(
+  TARGETS macaroons
+  EXPORT export_macaroons
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
-  PUBLIC_HEADER DESTINATION include
-  RUNTIME DESTINATION bin)
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
+ament_export_include_directories(include)
+ament_export_libraries(macaroons)
 
 ament_package()
