@@ -34,7 +34,7 @@
 
 /* macaroons */
 #include "base64.h"
-#include "macaroons.h"
+#include "macaroons/macaroons.h"
 #include "macaroons-inner.h"
 #include "port.h"
 

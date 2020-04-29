@@ -34,24 +34,25 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
-#ifdef HAVE_BSD_STDLIB_H
+#include <string.h>
+
+#if defined(HAVE_BSD_STDLIB_H) && !defined(__FreeBSD__)
 #include <bsd/stdlib.h>
 #endif
-#include <string.h>
-#ifdef HAVE_LIBUTIL_H
+
+#if defined(HAVE_LIBUTIL_H) || defined(__FreeBSD__)
 #include <libutil.h>
-#elif defined HAVE_BSD_LIBUTIL_H
+#elif defined(HAVE_BSD_LIBUTIL_H) && !defined(__FreeBSD__)
 #include <bsd/libutil.h>
-#elif defined HAVE_OSX_LIBUTIL_H
+#elif defined(HAVE_OSX_LIBUTIL_H) && !defined(__FreeBSD__)
 #include <util.h>
 #else
 #error portability problem
 #endif
 
 /* macaroons */
-#include "macaroons.h"
+#include "macaroons/macaroons.h"
 #include "constants.h"
-#include "macaroons.h"
 #include "macaroons-inner.h"
 #include "port.h"
 #include "slice.h"
