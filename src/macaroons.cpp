@@ -131,12 +131,10 @@ Macaroon::initialised()
 {
     if(M_)
     {
-        return 1;
+        return true;
     }
-    else
-    {
-        return 0;
-    }
+
+    return false;
 }
 
 struct macaroon*
@@ -227,6 +225,17 @@ MacaroonVerifier::initialise(const std::string key)
     }
 }
 
+bool
+MacaroonVerifier::initialised()
+{
+    if(V_)
+    {
+        return true;
+    }
+
+    return false;
+}
+
 int
 MacaroonVerifier::satisfy_exact(const std::string predicate)
 {
@@ -261,12 +270,10 @@ MacaroonVerifier::satisfy_general(const std::string predicate)
    return -1;
 }
 
-int
+bool
 MacaroonVerifier::verify(Macaroon M){
     /*
     verifies a macaroon M against the private verifier V_
-
-    returns 0 if added successfully, -1 otherwise
 
     TODO:  eventually this needs to take in a tree of macaroons for 3rd party verifiers 
     */    
@@ -281,7 +288,12 @@ MacaroonVerifier::verify(Macaroon M){
 
     result = macaroon_verify(V_, M.get_macaroon_raw(), pkey, pkey_sz, MS, MS_sz, &err_);
 
-    return result;
+    if (result == 0)
+    {
+        return true;
+    }
+
+    return false;
 }
 
 void
