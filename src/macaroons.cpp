@@ -13,7 +13,7 @@
 ******************************************************************************/
 Macaroon::Macaroon(const std::string location, const std::string key, const std::string identifier)
 {
-    int result = create_macaroon(location, key, identifier);
+    int result = initialise(location, key, identifier);
 
     if (result != 0) { abort(); }
 }
@@ -99,7 +99,7 @@ Macaroon::deserialise(std::string M_serialised)
 }
 
 int
-Macaroon::create_macaroon(const std::string location, const std::string key, const std::string identifier)
+Macaroon::initialise(const std::string location, const std::string key, const std::string identifier)
 {
     const unsigned char* plocation = (const unsigned char*)location.c_str();
     const unsigned char* pkey = (const unsigned char*)key.c_str();
@@ -199,10 +199,32 @@ Macaroon::print_macaroon()
 /******************************************************************************
 *  MacaroonVerifier class implementation
 ******************************************************************************/
-MacaroonVerifier::MacaroonVerifier(std::string key)
+MacaroonVerifier::MacaroonVerifier(const std::string key)
+{
+    int result = initialise(key);
+
+    if(result != 0) { abort(); }
+}
+
+MacaroonVerifier::MacaroonVerifier()
+{
+    V_ = NULL;
+}
+
+int
+MacaroonVerifier::initialise(const std::string key)
 {
     V_ = macaroon_verifier_create();
     key_ = key;
+
+    if(V_)
+    {
+        return 0;
+    }
+    else
+    {
+        return -1;
+    }
 }
 
 int

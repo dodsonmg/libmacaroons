@@ -21,6 +21,7 @@ public:
   /* TODO: Create a copy contstructor */
   /* TODO: Create a destructor */
 
+  int initialise(const std::string location, const std::string key, const std::string identifier);
   std::string serialise();
   int deserialise(std::string M_serialised);
   int add_first_party_caveat(const std::string predicate);
@@ -31,7 +32,6 @@ public:
   std::string get_macaroon_error(); 
 
 private:
-  int create_macaroon(const std::string location, const std::string key, const std::string identifier);
   void print_macaroon_error();
 
   struct macaroon* M_;
@@ -45,8 +45,10 @@ private:
 class MacaroonVerifier
 {
   public:
-    MacaroonVerifier(std::string key);
+    MacaroonVerifier(const std::string key);
+    MacaroonVerifier();
 
+    int initialise(const std::string key);
     int satisfy_exact(const std::string predicate);
     int satisfy_general(const std::string predicate);
     int verify(Macaroon M);  // eventually this needs to take in a tree of macaroons for 3rd party verifiers
