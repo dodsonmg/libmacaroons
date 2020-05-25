@@ -227,6 +227,10 @@ macaroon_copy(const struct macaroon* M,
 int
 macaroon_cmp(const struct macaroon* M, const struct macaroon* N);
 
+/* convenience function for printing a macaroon in an easily readable format */
+void
+print_macaroon_raw(const struct macaroon* M, enum macaroon_returncode* err);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* __cplusplus */

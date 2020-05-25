@@ -44,6 +44,16 @@ install(
   INCLUDES DESTINATION include
 )
 
+# build a simple test application
+add_executable(macaroons_test
+              test_cpp/test.cpp)
+target_link_libraries(macaroons_test macaroons)
+ament_target_dependencies(macaroons_test macaroons)
+
+install(TARGETS
+  macaroons_test
+  DESTINATION lib/${PROJECT_NAME})
+
 ament_export_include_directories(include)
 ament_export_libraries(macaroons)
 

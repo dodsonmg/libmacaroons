@@ -913,6 +913,21 @@ macaroon_verify_raw(const struct macaroon_verifier* V,
     return rc;
 }
 
+void
+print_macaroon_raw(const struct macaroon* M, enum macaroon_returncode* err)
+{
+    size_t data_sz = 0;
+    char* data = NULL;
+    data_sz = macaroon_inspect_size_hint(M);
+    data = (char*)malloc(data_sz);
+
+    const char* marker = "--------------------------------------------------------------------------------";
+    macaroon_inspect(M, data, data_sz, err);
+    printf("%s\n", marker);
+    printf("%s\n", data);
+    printf("%s\n", marker);
+}
+
 MACAROON_API int
 macaroon_verify(const struct macaroon_verifier* V,
                 const struct macaroon* M,

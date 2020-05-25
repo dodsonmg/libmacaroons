@@ -25,6 +25,13 @@ Macaroon::Macaroon(const std::string M_serialised)
     if (result != 0) { abort(); }
 }
 
+Macaroon::Macaroon(const struct macaroon* M_raw)
+{
+    int result = initialise(M_raw);
+
+    if (result != 0) { abort(); }
+}
+
 Macaroon::Macaroon()
 {
     M_ = NULL;
@@ -73,9 +80,38 @@ Macaroon::add_first_party_caveat(const std::string predicate)
 }
 
 int
-Macaroon::add_third_party_caveat(void)
+Macaroon::add_third_party_caveat(const std::string location, const std::string key, const std::string identifier)
 {
-    return -1;
+    const unsigned char* plocation = (const unsigned char*)location.c_str();
+    const unsigned char* pkey = (const unsigned char*)key.c_str();
+    const unsigned char* pidentifier = (const unsigned char*)identifier.c_str();
+
+    size_t location_sz = location.size();
+    size_t key_sz = key.size();
+    size_t identifier_sz = identifier.size();
+
+    M_ = macaroon_add_third_party_caveat(M_, plocation, location_sz,
+                                        pkey, key_sz,
+                                        pidentifier, identifier_sz, &err_);
+
+    if(!M_)
+    {
+        return -1;
+    }
+
+    return 0;
+}
+
+Macaroon
+Macaroon::prepare_for_request(Macaroon D)
+{
+    Macaroon DP;
+    struct macaroon* DP_raw;
+    DP_raw = macaroon_prepare_for_request(M_, D.get_macaroon_raw(), &err_);
+
+    DP.initialise(DP_raw);
+
+    return DP;
 }
 
 int
@@ -124,6 +160,19 @@ Macaroon::initialise(const std::string location, const std::string key, const st
     }
 
     return 0;
+}
+
+int
+Macaroon::initialise(const struct macaroon* M_raw)
+{
+    M_ = (struct macaroon*)M_raw;
+
+    if(!M_)
+    {
+        return -1;
+    }
+
+    return 0;    
 }
 
 bool
@@ -189,8 +238,11 @@ Macaroon::print_macaroon()
     data_sz = macaroon_inspect_size_hint(M_);
     data = (char*)malloc(data_sz);
 
+    std::string marker = "--------------------------------------------------------------------------------";
     macaroon_inspect(M_, data, data_sz, &err_);
+    std::cout << marker << std::endl;
     std::cout << data << std::endl;
+    std::cout << marker << std::endl;
 }
 
 
@@ -271,22 +323,32 @@ MacaroonVerifier::satisfy_general(const std::string predicate)
 }
 
 bool
-MacaroonVerifier::verify(Macaroon M){
+MacaroonVerifier::verify(Macaroon M, std::vector<Macaroon> MS){
     /*
-    verifies a macaroon M against the private verifier V_
-
-    TODO:  eventually this needs to take in a tree of macaroons for 3rd party verifiers 
-    */    
+    verifies a macaroon M and discharge macaroons MS against the private verifier V_
+    */
 
     int result;
     const unsigned char* pkey = (const unsigned char*)key_.c_str();
     size_t pkey_sz = key_.size();
 
-    // eventually these should be implemented
-    struct macaroon** MS = NULL;
-    size_t MS_sz = 0;
+    struct macaroon** MS_raw = NULL;
+    size_t MS_raw_sz = MS.size();
 
-    result = macaroon_verify(V_, M.get_macaroon_raw(), pkey, pkey_sz, MS, MS_sz, &err_);
+    if(MS_raw_sz > 0)
+    {
+        MS_raw = (struct macaroon**)malloc(sizeof(struct macaroon*) * MS_raw_sz);
+        for(size_t i = 0; i < MS_raw_sz; i++)
+        {
+            Macaroon DP = MS[i];
+            if(DP.initialised())
+            {
+                MS_raw[i] = DP.get_macaroon_raw();
+            }
+        }
+    }
+
+    result = macaroon_verify(V_, M.get_macaroon_raw(), pkey, pkey_sz, MS_raw, MS_raw_sz, &err_);
 
     if (result == 0)
     {
