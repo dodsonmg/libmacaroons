@@ -61,6 +61,8 @@ class MacaroonVerifier
 
   private:
     void print_verifier_error();
+    int satisfy_general(void);
+
 
     struct macaroon_verifier* V_;
     std::string key_;

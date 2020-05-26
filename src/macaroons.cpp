@@ -307,19 +307,17 @@ MacaroonVerifier::satisfy_exact(const std::string predicate)
 }
 
 int
-MacaroonVerifier::satisfy_general(const std::string predicate)
+MacaroonVerifier::satisfy_general(void)
 {
     /*
     adds a caveat to the verifier that is satisfied generally
 
     returns 0 if added successfully, -1 otherwise
 
-    not implemented yet, so just returns -1 (i.e., failure)
+    not implemented because I can't figure out how... returns -1
     */
-   std::cout << "MacaroonVerifier::satisfy_general() is not implemented yet." << std::endl;
-   std::cout << "Attempting to set predicate " << predicate << std::endl;
-   
-   return -1;
+
+    return -1;
 }
 
 bool
