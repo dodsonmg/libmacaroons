@@ -198,6 +198,9 @@ public:
         return *this;
     }
 
+    // Macaroon() { *this = Macaroon("", "", ""); }
+    Macaroon() { *this = nullptr; }
+
     ~Macaroon()
     {
         if (m_macaroon)
