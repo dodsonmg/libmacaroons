@@ -21,7 +21,7 @@ add_library(macaroons SHARED
             src/v1.c
             src/v2.c
             src/varint.c
-            src/macaroons.cpp
+            # src/macaroons.cpp
             )
 
 target_include_directories(macaroons PUBLIC
@@ -45,14 +45,24 @@ install(
 )
 
 # build a simple test application
-add_executable(macaroons_test
-              test_cpp/test.cpp)
-target_link_libraries(macaroons_test macaroons)
-ament_target_dependencies(macaroons_test macaroons)
+# add_executable(macaroons_test
+#               test_cpp/test.cpp)
+# target_link_libraries(macaroons_test macaroons)
+# ament_target_dependencies(macaroons_test macaroons)
+
+# install(TARGETS
+#   macaroons_test
+#   DESTINATION lib/${PROJECT_NAME})
+
+# build a second test application based on kzemek's repo
+add_executable(macaroons_test_1
+              test_cpp/testExamples.cpp)
+target_link_libraries(macaroons_test_1 macaroons)
+ament_target_dependencies(macaroons_test_1 macaroons)
 
 install(TARGETS
-  macaroons_test
-  DESTINATION lib/${PROJECT_NAME})
+  macaroons_test_1
+  DESTINATION lib/${PROJECT_NAME})  
 
 ament_export_include_directories(include)
 ament_export_libraries(macaroons)
