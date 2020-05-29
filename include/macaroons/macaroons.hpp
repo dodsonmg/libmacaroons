@@ -95,7 +95,7 @@ MACAROONS_DEFINE_EXCEPTION(
     TooManyCaveats, "too many caveats", MACAROON_TOO_MANY_CAVEATS);
 MACAROONS_DEFINE_EXCEPTION(Invalid, "macaroon invalid", MACAROON_INVALID);
 
-inline void throwOnError(const macaroon_returncode err)
+inline void throw_on_error(const macaroon_returncode err)
 {
     switch (err) {
         case MACAROON_SUCCESS:
@@ -180,7 +180,7 @@ public:
         macaroon_returncode err = MACAROON_SUCCESS;
         m_macaroon = macaroon_create(detail::cast(location), location.size(),
             detail::cast(key), key.size(), detail::cast(id), id.size(), &err);
-        exception::throwOnError(err);
+        exception::throw_on_error(err);
     }
 
     Macaroon(const Macaroon &o) { *this = o; }
@@ -192,7 +192,7 @@ public:
 
         macaroon_returncode err = MACAROON_SUCCESS;
         auto macaroon = macaroon_copy(o.m_macaroon, &err);
-        exception::throwOnError(err);
+        exception::throw_on_error(err);
 
         m_macaroon = macaroon;
         return *this;
@@ -204,17 +204,17 @@ public:
             macaroon_destroy(m_macaroon);
     }
 
-    Macaroon addFirstPartyCaveat(const std::string &predicate) const
+    Macaroon add_first_party_caveat(const std::string &predicate) const
     {
         macaroon_returncode err = MACAROON_SUCCESS;
         auto macaroon = macaroon_add_first_party_caveat(
             m_macaroon, detail::cast(predicate), predicate.size(), &err);
 
-        exception::throwOnError(err);
+        exception::throw_on_error(err);
         return {macaroon};
     }
 
-    Macaroon addThirdPartyCaveat(const std::string &location,
+    Macaroon add_third_party_caveat(const std::string &location,
         const std::string &key, const std::string &id) const
     {
         macaroon_returncode err = MACAROON_SUCCESS;
@@ -222,11 +222,11 @@ public:
             detail::cast(location), location.size(), detail::cast(key),
             key.size(), detail::cast(id), id.size(), &err);
 
-        exception::throwOnError(err);
+        exception::throw_on_error(err);
         return {macaroon};
     }
 
-    std::vector<ThirdPartyCaveat> thirdPartyCaveats() const
+    std::vector<ThirdPartyCaveat> third_party_caveats() const
     {
         const auto size = macaroon_num_third_party_caveats(m_macaroon);
 
@@ -240,12 +240,12 @@ public:
         return caveats;
     }
 
-    Macaroon prepareForRequest(const Macaroon &dispatch)
+    Macaroon prepare_for_request(const Macaroon &dispatch)
     {
         macaroon_returncode err = MACAROON_SUCCESS;
         auto macaroon =
             macaroon_prepare_for_request(m_macaroon, dispatch.m_macaroon, &err);
-        exception::throwOnError(err);
+        exception::throw_on_error(err);
         return {macaroon};
     }
 
@@ -273,20 +273,20 @@ public:
 
     std::string serialize() const
     {
-        return serializeGeneric(
+        return serialize_generic(
             macaroon_serialize_size_hint, macaroon_serialize);
     }
 
     std::string inspect() const
     {
-        return serializeInspect(macaroon_inspect_size_hint, macaroon_inspect);
+        return serialize_inspect(macaroon_inspect_size_hint, macaroon_inspect);
     }
 
     static Macaroon deserialize(const std::string &data)
     {
         macaroon_returncode err = MACAROON_SUCCESS;
         auto macaroon = macaroon_deserialize((unsigned char*)data.data(), data.size(), &err);
-        exception::throwOnError(err);
+        exception::throw_on_error(err);
 
         return {macaroon};
     }
@@ -302,30 +302,30 @@ private:
     {
     }
 
-    std::string serializeGeneric(size_t (*sizeHintFun)(const struct macaroon *, enum macaroon_format),
-        size_t (*serializeFun)(const struct macaroon *, enum macaroon_format, unsigned char *, size_t,
+    std::string serialize_generic(size_t (*size_hint_fun)(const struct macaroon *, enum macaroon_format),
+        size_t (*serialize_fun)(const struct macaroon *, enum macaroon_format, unsigned char *, size_t,
                                      enum macaroon_returncode *)) const
     {
-        const auto buf_sz = sizeHintFun(m_macaroon, MACAROON_V1);
+        const auto buf_sz = size_hint_fun(m_macaroon, MACAROON_V1);
         unsigned char* buf = (unsigned char*)malloc(buf_sz);
 
         macaroon_returncode err = MACAROON_SUCCESS;
-        serializeFun(m_macaroon, MACAROON_V1, buf, buf_sz, &err);
+        serialize_fun(m_macaroon, MACAROON_V1, buf, buf_sz, &err);
 
         std::string serialized( (const char *)buf );
 
         return serialized;
     }
 
-    std::string serializeInspect(size_t (*sizeHintFun)(const struct macaroon *),
-        int (*serializeFun)(const struct macaroon *, char *, size_t,
+    std::string serialize_inspect(size_t (*size_hint_fun)(const struct macaroon *),
+        int (*serialize_fun)(const struct macaroon *, char *, size_t,
                                      enum macaroon_returncode *)) const
     {
-        const auto buf_sz = sizeHintFun(m_macaroon);
+        const auto buf_sz = size_hint_fun(m_macaroon);
         char* buf = (char*)malloc(buf_sz);
         
         macaroon_returncode err = MACAROON_SUCCESS;
-        serializeFun(m_macaroon, buf, buf_sz, &err);
+        serialize_fun(m_macaroon, buf, buf_sz, &err);
 
         std::string serialised( buf );
 
@@ -357,15 +357,15 @@ public:
 
     ~Verifier() { macaroon_verifier_destroy(m_verifier); }
 
-    void satisfyExact(const std::string &predicate)
+    void satisfy_exact(const std::string &predicate)
     {
         macaroon_returncode err = MACAROON_SUCCESS;
         macaroon_verifier_satisfy_exact(
             m_verifier, detail::cast(predicate), predicate.size(), &err);
-        exception::throwOnError(err);
+        exception::throw_on_error(err);
     }
 
-    void satisfyGeneral(
+    void satisfy_general(
         std::function<bool(const std::string &predicate)> generalCheck)
     {
         m_generalCheck.emplace_front(std::move(generalCheck));
@@ -379,7 +379,7 @@ public:
                     return callback({pred, predSize}) ? 0 : 1;
                 },
                 &m_generalCheck.front(), &err);
-            exception::throwOnError(err);
+            exception::throw_on_error(err);
         }
         catch (...) {
             m_generalCheck.pop_front();
@@ -387,7 +387,7 @@ public:
         }
     }
 
-    bool verifyUnsafe(const Macaroon &macaroon, const std::string &key,
+    bool verify_unsafe(const Macaroon &macaroon, const std::string &key,
         const std::vector<Macaroon> &dispatches = {})
     {
         std::vector<struct macaroon *> disp;
@@ -403,14 +403,14 @@ public:
         if (err == MACAROON_NOT_AUTHORIZED)
             return false;
 
-        exception::throwOnError(err);
+        exception::throw_on_error(err);
         return true;
     }
 
     void verify(const Macaroon &macaroon, const std::string &key,
         const std::vector<Macaroon> &dispatches = {})
     {
-        if (!verifyUnsafe(macaroon, key, dispatches))
+        if (!verify_unsafe(macaroon, key, dispatches))
             throw exception::NotAuthorized{};
     }
 

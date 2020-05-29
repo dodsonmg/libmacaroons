@@ -9,7 +9,7 @@
 
 using namespace macaroons;
 
-std::string hexEncode(const std::vector<unsigned char> &data)
+std::string hex_encode(const std::vector<unsigned char> &data)
 {
     std::stringstream stream;
     stream.fill('0');
@@ -20,12 +20,10 @@ std::string hexEncode(const std::vector<unsigned char> &data)
     return stream.str();
 }
 
-void usingThirdPartyCaveats(Verifier &V);
+void using_third_party_caveats(Verifier &V);
 
 int main()
 {
-
-    int count = 0;
 
     auto secret = "this is our super secret key; only we should know it";
     auto pub = "we used our secret key";
@@ -35,7 +33,7 @@ int main()
 
     assert(M.identifier() == pub);
     assert(M.location() == location);
-    assert(hexEncode(M.signature()) ==
+    assert(hex_encode(M.signature()) ==
         "e3d9e02908526c4c0039ae15114115d97fdd68bf2ba379b342aaf0f617d0552f");
     assert(M.serialize() == "MDAxY2xvY2F0aW9uIGh0dHA6Ly9teWJhbmsvCjAwMjZpZGVudG"
                             "lmaWVyIHdlIHVzZWQgb3VyIHNlY3JldCBrZXkKMDAyZnNpZ25h"
@@ -44,17 +42,17 @@ int main()
 
     std::cout << M.inspect() << std::endl;
 
-    M = M.addFirstPartyCaveat("account = 3735928559");
+    M = M.add_first_party_caveat("account = 3735928559");
 
     std::cout << std::endl;
     std::cout << M.inspect() << std::endl;
 
-    M = M.addFirstPartyCaveat("time < 2030-01-01T00:00");
-    assert(hexEncode(M.signature()) ==
+    M = M.add_first_party_caveat("time < 2030-01-01T00:00");
+    assert(hex_encode(M.signature()) ==
         "d60992fd99c8e8ee9d05c61d71268b2e6a76fa4890ff4af6abd8bbbb4dfde5cb");
 
-    M = M.addFirstPartyCaveat("email = alice@example.org");
-    assert(hexEncode(M.signature()) ==
+    M = M.add_first_party_caveat("email = alice@example.org");
+    assert(hex_encode(M.signature()) ==
         "70754d73ccf8e4740d639ef8a26d337db82205ea4b37e683002849577afa6f83");
 
     std::cout << std::endl;
@@ -77,15 +75,15 @@ int main()
         std::cout << e.what() << std::endl;
     }
 
-    assert(!V.verifyUnsafe(M, secret));
+    assert(!V.verify_unsafe(M, secret));
 
-    V.satisfyExact("account = 3735928559");
-    V.satisfyExact("email = alice@example.org");
-    V.satisfyExact("IP = 127.0.0.1");
-    V.satisfyExact("browser = Chrome");
-    V.satisfyExact("action = deposit");
+    V.satisfy_exact("account = 3735928559");
+    V.satisfy_exact("email = alice@example.org");
+    V.satisfy_exact("IP = 127.0.0.1");
+    V.satisfy_exact("browser = Chrome");
+    V.satisfy_exact("action = deposit");
 
-    auto checkTime = [](const std::string &caveat) {
+    auto check_time = [](const std::string &caveat) {
         if (caveat.find("time < ") != 0)
             return false;
 
@@ -99,26 +97,26 @@ int main()
         return std::time(nullptr) < t;
     };
 
-    assert(checkTime("time < 2030-01-01T00:00"));
-    assert(!checkTime("time < 2014-01-01T00:00"));
-    assert(!checkTime("account = 3735928559"));
+    assert(check_time("time < 2030-01-01T00:00"));
+    assert(!check_time("time < 2014-01-01T00:00"));
+    assert(!check_time("account = 3735928559"));
 
-    V.satisfyGeneral(std::move(checkTime));
-    assert(V.verifyUnsafe(M, secret));
+    V.satisfy_general(std::move(check_time));
+    assert(V.verify_unsafe(M, secret));
 
-    auto N = M.addFirstPartyCaveat("action = deposit");
-    assert(V.verifyUnsafe(N, secret));
+    auto N = M.add_first_party_caveat("action = deposit");
+    assert(V.verify_unsafe(N, secret));
 
     // Unknown caveat
-    N = M.addFirstPartyCaveat("OS = Windows XP");
-    assert(!V.verifyUnsafe(N, secret));
+    N = M.add_first_party_caveat("OS = Windows XP");
+    assert(!V.verify_unsafe(N, secret));
 
     // False caveat
-    N = M.addFirstPartyCaveat("time < 2014-01-01T00:00");
-    assert(!V.verifyUnsafe(N, secret));
+    N = M.add_first_party_caveat("time < 2014-01-01T00:00");
+    assert(!V.verify_unsafe(N, secret));
 
     // Bad secret
-    assert(!V.verifyUnsafe(M, "this is not the secret we were looking for"));
+    assert(!V.verify_unsafe(M, "this is not the secret we were looking for"));
 
     // Incompetent hackers trying to change the signature
     N = Macaroon::deserialize(
@@ -132,12 +130,12 @@ int main()
     std::cout << N.inspect() << std::endl;
 
     assert(M.signature() != N.signature());
-    assert(!V.verifyUnsafe(N, secret));
+    assert(!V.verify_unsafe(N, secret));
 
-    usingThirdPartyCaveats(V);
+    using_third_party_caveats(V);
 }
 
-void usingThirdPartyCaveats(Verifier &V)
+void using_third_party_caveats(Verifier &V)
 {
     auto secret =
         "this is a different super-secret key; never use the same secret twice";
@@ -145,7 +143,7 @@ void usingThirdPartyCaveats(Verifier &V)
     auto location = "http://mybank/";
 
     Macaroon M{location, secret, pub};
-    M = M.addFirstPartyCaveat("account = 3735928559");
+    M = M.add_first_party_caveat("account = 3735928559");
 
     std::cout << std::endl;
     std::cout << M.inspect() << std::endl;
@@ -159,27 +157,27 @@ void usingThirdPartyCaveats(Verifier &V)
     // auto identifier = recvFromAuth();
 
     auto identifier = "this was how we remind auth of key/pred";
-    M = M.addThirdPartyCaveat("http://auth.mybank/", caveatKey, identifier);
+    M = M.add_third_party_caveat("http://auth.mybank/", caveatKey, identifier);
 
     std::cout << std::endl;
     std::cout << M.inspect() << std::endl;
 
-    assert(M.thirdPartyCaveats().size() == 1);
-    assert(M.thirdPartyCaveats().front().location() == "http://auth.mybank/");
-    assert(M.thirdPartyCaveats().front().identifier() ==
+    assert(M.third_party_caveats().size() == 1);
+    assert(M.third_party_caveats().front().location() == "http://auth.mybank/");
+    assert(M.third_party_caveats().front().identifier() ==
         "this was how we remind auth of key/pred");
 
     Macaroon D{"http://auth.mybank/", caveatKey, identifier};
-    D = D.addFirstPartyCaveat("time < 2030-01-01T00:00");
+    D = D.add_first_party_caveat("time < 2030-01-01T00:00");
 
     std::cout << std::endl;
     std::cout << D.inspect() << std::endl;
 
-    auto DP = M.prepareForRequest(D);
+    auto DP = M.prepare_for_request(D);
 
-    assert(hexEncode(D.signature()) ==
+    assert(hex_encode(D.signature()) ==
         "aa0371f6baec22abb9c0bda1050756cc58392dc88f4696962f5731e497359cb4");
 
-    assert(V.verifyUnsafe(M, secret, {DP}));
-    assert(!V.verifyUnsafe(M, secret, {D}));
+    assert(V.verify_unsafe(M, secret, {DP}));
+    assert(!V.verify_unsafe(M, secret, {D}));
 }
