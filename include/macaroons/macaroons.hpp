@@ -274,6 +274,11 @@ public:
         return {sig, sig + sigLen};
     }
 
+    std::string signature_string() const
+    {
+        return hex_encode(signature());
+    }
+
     std::string serialize() const
     {
         return serialize_generic(
@@ -326,13 +331,24 @@ private:
     {
         const auto buf_sz = size_hint_fun(m_macaroon);
         char* buf = (char*)malloc(buf_sz);
-        
+
         macaroon_returncode err = MACAROON_SUCCESS;
         serialize_fun(m_macaroon, buf, buf_sz, &err);
 
         std::string serialised( buf );
 
         return serialised;
+    }
+
+    std::string hex_encode(const std::vector<unsigned char> &data) const
+    {
+        std::stringstream stream;
+        stream.fill('0');
+
+        for (auto c : data)
+            stream << std::hex << std::setw(2) << static_cast<unsigned int>(c);
+
+        return stream.str();
     }
 
     struct macaroon *m_macaroon = nullptr;

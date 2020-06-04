@@ -151,7 +151,7 @@ void using_third_party_caveats(Verifier &V)
 
     // you'll likely want to use a higher entropy source to generate this key
     auto caveatKey = "4; guaranteed random by a fair toss of the dice";
-    auto predicate = "user = Alice";
+    // auto predicate = "user = Alice";
 
     // sendToAuth(caveat_key, predicate);
     // auto identifier = recvFromAuth();
