@@ -264,7 +264,7 @@ public:
 
         slices.push_back(M_inspect.substr(last, next-last));
 
-        return caveats;
+        return slices;
     }
 
     Macaroon prepare_for_request(const Macaroon &dispatch)
