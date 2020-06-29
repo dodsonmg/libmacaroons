@@ -32,8 +32,6 @@
 #ifndef MACAROONS_HPP
 #define MACAROONS_HPP
 
-#include "macaroons/macaroons.h"
-
 #include <algorithm>
 #include <forward_list>
 #include <functional>
@@ -302,6 +300,15 @@ public:
     bool operator==(const Macaroon &o)
     {
         return macaroon_cmp(m_macaroon, o.m_macaroon) == 0;
+    }
+
+    bool is_initialized() const
+    {
+        if(m_macaroon) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
 private:
