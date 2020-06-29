@@ -32,6 +32,8 @@
 #ifndef MACAROONS_HPP
 #define MACAROONS_HPP
 
+#include "macaroons/macaroons.h"
+
 #include <algorithm>
 #include <forward_list>
 #include <functional>
@@ -237,6 +239,30 @@ public:
             macaroon_third_party_caveat(m_macaroon, i, loc, loc, id, id);
             caveats.emplace_back(std::move(loc), std::move(id));
         }
+
+        return caveats;
+    }
+
+    /**
+     * Rough function to get all slices from a Macaroon
+     *
+     * Includes identifier, location, all caveats, and signature
+     * */
+    std::vector<std::string> all_slices() const
+    {
+        std::vector<std::string> slices;
+        std::string::size_type last = 0;
+        std::string::size_type next = 0;
+
+        std::string M_inspect = (*this).inspect();
+        std::string delimiter = "\n";
+
+        while ((next = M_inspect.find(delimiter, last)) != std::string::npos) {
+            slices.push_back(M_inspect.substr(last, next-last));
+            last = next + 1;
+        }
+
+        slices.push_back(M_inspect.substr(last, next-last));
 
         return caveats;
     }
