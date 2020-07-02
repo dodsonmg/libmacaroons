@@ -104,6 +104,14 @@ macaroon_add_first_party_caveat(const struct macaroon* M,
                                 const unsigned char* predicate, size_t predicate_sz,
                                 enum macaroon_returncode* err);
 
+/* extract the first party caveats */
+unsigned
+macaroon_num_first_party_caveats(const struct macaroon* M);
+
+int
+macaroon_first_party_caveat(const struct macaroon* M, unsigned which,
+                            const unsigned char** identifier, size_t* identifier_sz);
+
 /* Add a new third party caveat, and return a new macaroon.
  *  - location/location_sz is a hint to the third party's location
  *  - key/keys_sz is a secret shared shared between this macaroon and the third

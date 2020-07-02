@@ -243,6 +243,20 @@ public:
         return caveats;
     }
 
+    std::vector<std::string> first_party_caveats() const
+    {
+        const auto size = macaroon_num_first_party_caveats(m_macaroon);
+
+        std::vector<std::string> caveats;
+        for (std::size_t i = 0; i < size; ++i) {
+            detail::Stringizer id;
+            macaroon_first_party_caveat(m_macaroon, i, id, id);
+            caveats.push_back(std::move(id));
+        }
+
+        return caveats;
+    }
+
     /**
      * Rough function to get all slices from a Macaroon
      *

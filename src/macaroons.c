@@ -350,7 +350,7 @@ macaroon_add_third_party_caveat_raw(const struct macaroon* N,
     unsigned char new_sig[MACAROON_HASH_BYTES];
     unsigned char enc_nonce[MACAROON_SECRET_NONCE_BYTES];
     unsigned char enc_plaintext[MACAROON_SECRET_TEXT_ZERO_BYTES + MACAROON_HASH_BYTES];
-    unsigned char enc_ciphertext[MACAROON_SECRET_BOX_ZERO_BYTES + MACAROON_HASH_BYTES];
+    unsigned char enc_ciphertext[MACAROON_SECRET_BOX_ZERO_BYTES + MACAROON_HASH_BYTES + SECRET_BOX_OVERHEAD];
     unsigned char vid[VID_NONCE_KEY_SZ];
     size_t i;
     size_t sz;
@@ -503,6 +503,49 @@ macaroon_third_party_caveat(const struct macaroon* M, unsigned which,
             {
                 unstruct_slice(&M->caveats[idx].cid, identifier, identifier_sz);
                 unstruct_slice(&M->caveats[idx].cl, location, location_sz);
+                return 0;
+            }
+
+            ++count;
+        }
+    }
+
+    return -1;
+}
+
+MACAROON_API unsigned
+macaroon_num_first_party_caveats(const struct macaroon* M)
+{
+    size_t idx = 0;
+    unsigned count = 0;
+    VALIDATE(M);
+
+    for (idx = 0; idx < M->num_caveats; ++idx)
+    {
+        if (M->caveats[idx].vid.size == 0 && M->caveats[idx].cl.size == 0)
+        {
+            ++count;
+        }
+    }
+
+    return count;
+}
+
+MACAROON_API int
+macaroon_first_party_caveat(const struct macaroon* M, unsigned which,
+                            const unsigned char** identifier, size_t* identifier_sz)
+{
+    size_t idx = 0;
+    unsigned count = 0;
+    VALIDATE(M);
+
+    for (idx = 0; idx < M->num_caveats; ++idx)
+    {
+        if (M->caveats[idx].vid.size == 0 && M->caveats[idx].cl.size == 0)
+        {
+            if (count == which)
+            {
+                unstruct_slice(&M->caveats[idx].cid, identifier, identifier_sz);
                 return 0;
             }
 

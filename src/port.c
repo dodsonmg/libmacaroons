@@ -39,19 +39,19 @@
 #include "sha256.h"
 #include "tweetnacl.h"
 
-#if crypto_secretbox_xsalsa20poly1305_KEYBYTES != MACAROON_SECRET_KEY_BYTES 
+#if crypto_secretbox_xsalsa20poly1305_KEYBYTES != MACAROON_SECRET_KEY_BYTES
 #error set your constants right
 #endif
 
-#if crypto_secretbox_xsalsa20poly1305_NONCEBYTES != MACAROON_SECRET_NONCE_BYTES 
+#if crypto_secretbox_xsalsa20poly1305_NONCEBYTES != MACAROON_SECRET_NONCE_BYTES
 #error set your constants right
 #endif
 
-#if crypto_secretbox_xsalsa20poly1305_ZEROBYTES != MACAROON_SECRET_TEXT_ZERO_BYTES 
+#if crypto_secretbox_xsalsa20poly1305_ZEROBYTES != MACAROON_SECRET_TEXT_ZERO_BYTES
 #error set your constants right
 #endif
 
-#if crypto_secretbox_xsalsa20poly1305_BOXZEROBYTES != MACAROON_SECRET_BOX_ZERO_BYTES 
+#if crypto_secretbox_xsalsa20poly1305_BOXZEROBYTES != MACAROON_SECRET_BOX_ZERO_BYTES
 #error set your constants right
 #endif
 
