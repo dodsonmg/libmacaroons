@@ -43,16 +43,6 @@ install(
   INCLUDES DESTINATION include
 )
 
-# build a simple test application
-# add_executable(macaroons_test
-#               test_cpp/test.cpp)
-# target_link_libraries(macaroons_test macaroons)
-# ament_target_dependencies(macaroons_test macaroons)
-
-# install(TARGETS
-#   macaroons_test
-#   DESTINATION lib/${PROJECT_NAME})
-
 # build a second test application based on kzemek's repo
 add_executable(macaroons_test_1
               test_cpp/testExamples.cpp)
