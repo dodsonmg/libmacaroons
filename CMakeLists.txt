@@ -21,7 +21,6 @@ add_library(macaroons SHARED
             src/v1.c
             src/v2.c
             src/varint.c
-            # src/macaroons.cpp
             )
 
 target_include_directories(macaroons PUBLIC
@@ -62,7 +61,7 @@ ament_target_dependencies(macaroons_test_1 macaroons)
 
 install(TARGETS
   macaroons_test_1
-  DESTINATION lib/${PROJECT_NAME})  
+  DESTINATION lib/${PROJECT_NAME})
 
 ament_export_include_directories(include)
 ament_export_libraries(macaroons)
