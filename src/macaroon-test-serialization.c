@@ -119,7 +119,7 @@ main(int argc, const char* argv[])
         }
 
         size_t buf_sz = strlen(space + 1);
-        unsigned char* buf = malloc(buf_sz);
+        unsigned char* buf = pvPortMalloc(buf_sz);
 
         if (!buf)
         {
@@ -180,14 +180,14 @@ fail:
 exit:
     if (line)
     {
-        free(line);
+        vPortFree(line);
     }
 
     for (i = 0; i < macaroons_sz; ++i)
     {
         if (macaroons[i].B)
         {
-            free(macaroons[i].B);
+            vPortFree(macaroons[i].B);
         }
 
         if (macaroons[i].M)
@@ -198,7 +198,7 @@ exit:
 
     if (macaroons)
     {
-        free(macaroons);
+        vPortFree(macaroons);
     }
 
     (void) argc;

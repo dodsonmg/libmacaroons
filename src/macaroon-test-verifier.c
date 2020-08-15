@@ -77,7 +77,7 @@ parse_key(const char* line, unsigned char** key, size_t* key_sz)
 {
     const char* ptr = line + STRLENOF(KEY);
     *key_sz = strlen(ptr);
-    *key = malloc(*key_sz);
+    *key = pvPortMalloc(*key_sz);
 
     if (!*key)
     {
@@ -108,7 +108,7 @@ int
 parse_macaroon(const char* line, struct macaroon*** macaroons, size_t* macaroons_sz)
 {
     size_t buf_sz = strlen(line);
-    unsigned char* buf = malloc(buf_sz);
+    unsigned char* buf = pvPortMalloc(buf_sz);
     struct macaroon** tmp;
 
     if (!buf)
@@ -121,13 +121,13 @@ parse_macaroon(const char* line, struct macaroon*** macaroons, size_t* macaroons
     if (rc < 0)
     {
         fprintf(stderr, "could not unwrap serialized macaroon\n");
-        free(buf);
+        vPortFree(buf);
         return -1;
     }
 
     enum macaroon_returncode err;
     struct macaroon* M = macaroon_deserialize(buf, rc, &err);
-    free(buf);
+    vPortFree(buf);
 
     if (!M)
     {
@@ -147,7 +147,7 @@ parse_macaroon(const char* line, struct macaroon*** macaroons, size_t* macaroons
     (*macaroons)[*macaroons_sz - 1] = M;
     return 0;
 }
-        
+
 int
 main(int argc, const char* argv[])
 {
@@ -236,7 +236,7 @@ main(int argc, const char* argv[])
     }
 
     enum macaroon_returncode err;
-    int verify = macaroon_verify(V, macaroons[0], key, key_sz, 
+    int verify = macaroon_verify(V, macaroons[0], key, key_sz,
                                  macaroons + 1, macaroons_sz - 1, &err);
 
     if (verify != 0 && err != MACAROON_NOT_AUTHORIZED)
@@ -265,12 +265,12 @@ fail:
 exit:
     if (line)
     {
-        free(line);
+        vPortFree(line);
     }
 
     if (key)
     {
-        free(key);
+        vPortFree(key);
     }
 
     for (i = 0; i < macaroons_sz; ++i)
@@ -283,7 +283,7 @@ exit:
 
     if (macaroons)
     {
-        free(macaroons);
+        vPortFree(macaroons);
     }
 
     if (V)

@@ -125,7 +125,7 @@ macaroon_serialize_v1(const struct macaroon* M,
         return -1;
     }
 
-    tmp = malloc(sizeof(unsigned char) * sz);
+    tmp = pvPortMalloc(sizeof(unsigned char) * sz);
 
     if (!tmp)
     {
@@ -157,7 +157,7 @@ macaroon_serialize_v1(const struct macaroon* M,
 
     ptr = serialize_slice_as_packet(SIGNATURE, SIGNATURE_SZ, &M->signature, ptr);
     rc = b64_ntop(tmp, ptr - tmp, data, data_sz);
-    free(tmp);
+    vPortFree(tmp);
 
     if (rc < 0)
     {
@@ -187,7 +187,7 @@ macaroon_deserialize_v1(const char* _data, const size_t _data_sz, enum macaroon_
     int b64_sz;
     struct macaroon* M;
 
-    data = malloc(sizeof(unsigned char) * _data_sz);
+    data = pvPortMalloc(sizeof(unsigned char) * _data_sz);
 
     if (!data)
     {
@@ -200,14 +200,14 @@ macaroon_deserialize_v1(const char* _data, const size_t _data_sz, enum macaroon_
     if (b64_sz <= 0)
     {
         *err = MACAROON_INVALID;
-        free(data);
+        vPortFree(data);
         return NULL;
     }
 
     if (data[0] == '{')
     {
         *err = MACAROON_NO_JSON_SUPPORT;
-        free(data);
+        vPortFree(data);
         return NULL;
     }
 
@@ -224,7 +224,7 @@ macaroon_deserialize_v1(const char* _data, const size_t _data_sz, enum macaroon_
     if (!rptr || num_pkts < 3)
     {
         *err = MACAROON_INVALID;
-        free(data);
+        vPortFree(data);
         return NULL;
     }
 
@@ -234,7 +234,7 @@ macaroon_deserialize_v1(const char* _data, const size_t _data_sz, enum macaroon_
     if (!M)
     {
         *err = MACAROON_OUT_OF_MEMORY;
-        free(data);
+        vPortFree(data);
         return NULL;
     }
 
@@ -244,16 +244,16 @@ macaroon_deserialize_v1(const char* _data, const size_t _data_sz, enum macaroon_
     /* location */
     if (copy_if_parses(&rptr, end, parse_location_packet, &M->location, &wptr) < 0)
     {
-        free(M);
-        free(data);
+        vPortFree(M);
+        vPortFree(data);
         return NULL;
     }
 
     /* identifier */
     if (copy_if_parses(&rptr, end, parse_identifier_packet, &M->identifier, &wptr) < 0)
     {
-        free(M);
-        free(data);
+        vPortFree(M);
+        vPortFree(data);
         return NULL;
     }
 
@@ -281,8 +281,8 @@ macaroon_deserialize_v1(const char* _data, const size_t _data_sz, enum macaroon_
         {
             if (M->caveats[M->num_caveats].vid.size)
             {
-                free(M);
-                free(data);
+                vPortFree(M);
+                vPortFree(data);
                 return NULL;
             }
 
@@ -292,8 +292,8 @@ macaroon_deserialize_v1(const char* _data, const size_t _data_sz, enum macaroon_
         {
             if (M->caveats[M->num_caveats].cl.size)
             {
-                free(M);
-                free(data);
+                vPortFree(M);
+                vPortFree(data);
                 return NULL;
             }
 
@@ -320,8 +320,8 @@ macaroon_deserialize_v1(const char* _data, const size_t _data_sz, enum macaroon_
 
     if (parse_signature_packet(&pkt, &sig) < 0)
     {
-        free(M);
-        free(data);
+        vPortFree(M);
+        vPortFree(data);
         return NULL;
     }
 
@@ -329,12 +329,12 @@ macaroon_deserialize_v1(const char* _data, const size_t _data_sz, enum macaroon_
 
     if (macaroon_validate(M) < 0)
     {
-        free(M);
-        free(data);
+        vPortFree(M);
+        vPortFree(data);
         return NULL;
     }
 
-    free(data);
+    vPortFree(data);
     *err = MACAROON_SUCCESS;
     return M;
 }
@@ -353,7 +353,7 @@ macaroon_inspect_size_hint_v1(const struct macaroon* M)
  * responsible for freeing it.
  */
 static int
-encode(enum encoding encoding, 
+encode(enum encoding encoding,
        const unsigned char* val, size_t val_sz,
        const unsigned char** result, size_t* result_sz,
        enum macaroon_returncode* err)
@@ -366,7 +366,7 @@ encode(enum encoding encoding,
         return 0;
     }
     enc_sz = encoded_size(encoding, val_sz);
-    enc = malloc(enc_sz + 1);
+    enc = pvPortMalloc(enc_sz + 1);
     if (enc == NULL)
     {
         *err = MACAROON_OUT_OF_MEMORY;
@@ -420,7 +420,7 @@ inspect_packet(const char* key,
 
     if (enc_val != from->data)
     {
-        free((void *)enc_val);
+        vPortFree((void *)enc_val);
     }
     return ptr + total_sz;
 }

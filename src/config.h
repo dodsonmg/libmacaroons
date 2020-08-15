@@ -2,10 +2,10 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
 /* Define to 1 if you have the <bsd/libutil.h> header file. */
-#define HAVE_BSD_LIBUTIL_H 1
+#undef HAVE_BSD_LIBUTIL_H
 
 /* Define to 1 if you have the <bsd/stdlib.h> header file. */
-#define HAVE_BSD_STDLIB_H 1
+#undef HAVE_BSD_STDLIB_H
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #define HAVE_DLFCN_H 1

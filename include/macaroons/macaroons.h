@@ -32,6 +32,9 @@
 /* C */
 #include <stdlib.h>
 
+/* FreeRTOS */
+#include "FreeRTOS.h"
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -149,7 +152,7 @@ macaroon_prepare_for_request(const struct macaroon* M,
 
 /* Verification tool for verifying macaroons */
 struct macaroon_verifier*
-macaroon_verifier_create();
+macaroon_verifier_create(void);
 
 void
 macaroon_verifier_destroy(struct macaroon_verifier* V);
