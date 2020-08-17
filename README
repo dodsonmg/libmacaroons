@@ -1,5 +1,13 @@
-> Note: This README file is a slightly adapted version of README from
+> Note: This README file is an adapted version of README from
 > [rescrv/libmacaroons][1].
+
+Modifications
+=============
+Several modifications to support FreeRTOS were necessary:
+- malloc() -> pvPortMalloc (requires #include "FreeRTOS.h" and the use of heap_4.c)
+- free() -> vPortFree
+- abandoning v2 (this is really just a simplification.  the format was unnecessary for our demo and presented challenges (such as the use of realloc(), which isn't supported by existing FreeRTOS ports) so we don't compile it.)
+
 
 Macaroons are Better Than Cookies!
 ==================================
@@ -17,13 +25,13 @@ Macaroons are great for authorization because they're similar enough to cookies
 to be immediately usable by developers, but they include several features not
 present in cookies or other token-based authorization schemes.  In particular:
 
- - Delegation with Contextual Caveats (i.e., confinement of the usage context):  
-   Macaroons support delegation.  Give your macaroon to another user, and they 
-   can act on your behalf, with the same authority.  Cookies permit delegation 
+ - Delegation with Contextual Caveats (i.e., confinement of the usage context):
+   Macaroons support delegation.  Give your macaroon to another user, and they
+   can act on your behalf, with the same authority.  Cookies permit delegation
    as well, but the remaining features of macaroons make it much more safe and
    practical to pass around macaroons than cookies.  In particular, macaroons
    can limit when, where, and by whom the delegated authority can be exercised
-   (e.g., within one minute, from a machine that holds a certain key, or by a 
+   (e.g., within one minute, from a machine that holds a certain key, or by a
    certain logged-in user), by using attenuation and third-party caveats.
 
  - Attenuation:  Macaroons enable users to add caveats to the macaroon that
@@ -330,7 +338,7 @@ when macaroons are minted and when caveats are embedded.  In our banking
 example, we could provide some additional satisfied caveats to the verifier,
 to describe some (or all) of the properties that are known about the current
 request.  In this manner, the verifier can be made more general, and be
-"future-proofed", so that it will still function correctly even if somehow  
+"future-proofed", so that it will still function correctly even if somehow
 the authorization policy for Alice changes; for example, by adding the three
 following facts, the verifier will continue to work even if Alice decides to
 self-attenuate her macaroons to be only usable from her IP address and browser:

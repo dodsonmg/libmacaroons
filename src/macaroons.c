@@ -653,13 +653,37 @@ macaroon_verifier_satisfy_exact(struct macaroon_verifier* V,
     {
         V->predicates_cap = V->predicates_cap < 8 ? 8 :
                             V->predicates_cap + (V->predicates_cap >> 1);
+
+        /*
+         * this should be a realloc(), but that's not supported by FreeRTOS
+         * instead we'll do an expensive, manual operation to malloc, copy, then free
+         *
+         * alternately, we could simply have a fixed number of predicates allowed and
+         * malloc that all upon initialisation
+         */
+#if defined(__freertos__)
+        /* malloc for the new predicates capacity */
+        tmp = pvPortMalloc(V->predicates_cap * sizeof(struct predicate));
+#else
         tmp = realloc(V->predicates, V->predicates_cap * sizeof(struct predicate));
+#endif
 
         if (!tmp)
         {
             *err = MACAROON_OUT_OF_MEMORY;
             return -1;
         }
+
+#if defined(__freertos__)
+        /* copy predicates from the old to the new memory allocation */
+        for (int i = 0; i < V->predicates_sz; ++i)
+        {
+            tmp[i] = V->predicates[i];
+        }
+
+        /* free the old allocation */
+        vPortFree(V->predicates);
+#endif
 
         V->predicates = tmp;
     }
@@ -678,6 +702,7 @@ macaroon_verifier_satisfy_exact(struct macaroon_verifier* V,
     memmove(tmp->alloc, predicate, predicate_sz);
     ++V->predicates_sz;
     assert(V->predicates_sz <= V->predicates_cap);
+
     return 0;
 }
 
@@ -693,8 +718,22 @@ macaroon_verifier_satisfy_general(struct macaroon_verifier* V,
         V->verifier_callbacks_cap = V->verifier_callbacks_cap < 8 ? 8 :
                                     V->verifier_callbacks_cap +
                                     (V->verifier_callbacks_cap >> 1);
+
+        /*
+         * this should be a realloc(), but that's not supported by FreeRTOS
+         * instead we'll do an expensive, manual operation to malloc, copy, then free
+         *
+         * alternately, we could simply have a fixed number of predicates allowed and
+         * malloc that all upon initialisation
+         */
+
+#if defined(__freertos__)
+        /* malloc for the new predicates capacity */
+        tmp = pvPortMalloc(V->verifier_callbacks_cap * sizeof(struct verifier_callback));
+#else
         tmp = realloc(V->verifier_callbacks,
                       V->verifier_callbacks_cap * sizeof(struct verifier_callback));
+#endif
 
         if (!tmp)
         {
@@ -702,6 +741,18 @@ macaroon_verifier_satisfy_general(struct macaroon_verifier* V,
             return -1;
         }
 
+#if defined(__freertos__)
+        /* copy predicates from the old to the new memory allocation */
+        for (int i = 0; i < V->verifier_callbacks_sz; ++i)
+        {
+            tmp[i] = V->verifier_callbacks[i];
+        }
+
+        /* free the old allocation */
+        vPortFree(V->verifier_callbacks);
+#endif
+
+        /* assign the new allocation to the verifier structure */
         V->verifier_callbacks = tmp;
     }
 
