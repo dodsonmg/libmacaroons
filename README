@@ -6,8 +6,7 @@ Modifications
 Several modifications to support FreeRTOS were necessary:
 - malloc() -> pvPortMalloc (requires #include "FreeRTOS.h" and the use of heap_4.c)
 - free() -> vPortFree
-- abandoning v2 (this is really just a simplification.  the format was unnecessary for our demo and presented challenges (such as the use of realloc(), which isn't supported by existing FreeRTOS ports) so we don't compile it.)
-
+- realloc() -> an ugly hack allocating new memory, copying over, and then freeing the old pointer
 
 Macaroons are Better Than Cookies!
 ==================================
