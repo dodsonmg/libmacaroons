@@ -38,6 +38,12 @@
 #include <bsd/stdlib.h>
 #endif
 
+
+#if defined(__freertos__)
+/* FreeRTOS */
+#include "FreeRTOS.h"
+#endif
+
 // #if defined(HAVE_LIBUTIL_H) || defined(__FreeBSD__)
 // #include <libutil.h>
 // #elif defined(HAVE_BSD_LIBUTIL_H) && !defined(__FreeBSD__)
@@ -126,7 +132,11 @@ macaroon_malloc(const size_t num_caveats,
     const size_t additional_caveats = (num_caveats > 0) ? num_caveats - 1 : 0;
     const size_t sz = sizeof(struct macaroon) + body_data
                     + additional_caveats * sizeof(struct caveat);
+#if defined(__freertos__)
     M = pvPortMalloc(sz);
+#else
+    M = malloc(sz);
+#endif
 
     if (!M)
     {
@@ -231,7 +241,11 @@ macaroon_destroy(struct macaroon* M)
 {
     if (M)
     {
+#if defined(__freertos__)
         vPortFree(M);
+#else
+        free(M);
+#endif
     }
 }
 
@@ -599,7 +613,11 @@ MACAROON_API struct macaroon_verifier*
 macaroon_verifier_create()
 {
     struct macaroon_verifier* V;
+#if defined(__freertos__)
     V = pvPortMalloc(sizeof(struct macaroon_verifier));
+#else
+    V = malloc(sizeof(struct macaroon_verifier));
+#endif
 
     if (!V)
     {
@@ -624,21 +642,37 @@ macaroon_verifier_destroy(struct macaroon_verifier* V)
         {
             if (V->predicates[idx].alloc)
             {
+#if defined(__freertos__)
                 vPortFree(V->predicates[idx].alloc);
+#else
+                free(V->predicates[idx].alloc);
+#endif
             }
         }
 
         if (V->predicates)
         {
+#if defined(__freertos__)
             vPortFree(V->predicates);
+#else
+            free(V->predicates);
+#endif
         }
 
         if (V->verifier_callbacks)
         {
+#if defined(__freertos__)
             vPortFree(V->verifier_callbacks);
+#else
+            free(V->verifier_callbacks);
+#endif
         }
 
+#if defined(__freertos__)
         vPortFree(V);
+#else
+        free(V);
+#endif
     }
 }
 
@@ -690,7 +724,11 @@ macaroon_verifier_satisfy_exact(struct macaroon_verifier* V,
 
     assert(V->predicates_sz < V->predicates_cap);
     tmp = &V->predicates[V->predicates_sz];
+#if defined(__freertos__)
     tmp->data = tmp->alloc = pvPortMalloc(sizeof(unsigned char) * predicate_sz);
+#else
+    tmp->data = tmp->alloc = malloc(sizeof(unsigned char) * predicate_sz);
+#endif
     tmp->size = predicate_sz;
 
     if (!tmp->data)
@@ -978,7 +1016,11 @@ macaroon_verify_raw(const struct macaroon_verifier* V,
 {
     int rc = 0;
     size_t i = 0;
+#if defined(__freertos__)
     size_t* tree = pvPortMalloc((MS_sz + 1) * sizeof(size_t));
+#else
+    size_t* tree = malloc((MS_sz + 1) * sizeof(size_t));
+#endif
 
     if (!tree)
     {
@@ -1001,7 +1043,11 @@ macaroon_verify_raw(const struct macaroon_verifier* V,
         *err = MACAROON_NOT_AUTHORIZED;
     }
 
+#if defined(__freertos__)
     vPortFree(tree);
+#else
+    free(tree);
+#endif
     return rc;
 }
 
@@ -1011,7 +1057,11 @@ print_macaroon_raw(const struct macaroon* M, enum macaroon_returncode* err)
     size_t data_sz = 0;
     char* data = NULL;
     data_sz = macaroon_inspect_size_hint(M);
+#if defined(__freertos__)
     data = (char*)pvPortMalloc(data_sz);
+#else
+    data = (char*)malloc(data_sz);
+#endif
 
     const char* marker = "--------------------------------------------------------------------------------";
     macaroon_inspect(M, data, data_sz, err);

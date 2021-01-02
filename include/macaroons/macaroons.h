@@ -32,9 +32,6 @@
 /* C */
 #include <stdlib.h>
 
-/* FreeRTOS */
-#include "FreeRTOS.h"
-
 #ifdef __cplusplus
 extern "C"
 {
