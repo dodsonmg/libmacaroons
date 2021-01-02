@@ -35,6 +35,11 @@
 #include "packet.h"
 #include "v1.h"
 
+#if defined(__freertos__)
+/* FreeRTOS */
+#include "FreeRTOS.h"
+#endif
+
 #pragma GCC diagnostic ignored "-Wcast-qual"
 
 enum encoding

@@ -38,7 +38,6 @@
 #include <bsd/stdlib.h>
 #endif
 
-
 #if defined(__freertos__)
 /* FreeRTOS */
 #include "FreeRTOS.h"
