@@ -18,6 +18,9 @@ typedef unsigned long u32;
 typedef unsigned long long u64;
 typedef long long i64;
 typedef i64 gf[16];
+
+void
+arc4random_buf(void *buf, size_t len);
 #define randombytes(X, Y) arc4random_buf((X), (Y))
 
 static const u8
